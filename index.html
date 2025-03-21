@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Mrezwa</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        input, button, select {
+            font-size: 16px;
+            padding: 10px;
+            margin: 10px;
+        }
+        .dns-box {
+            font-size: 20px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #333;
+            display: inline-block;
+            border-radius: 8px;
+        }
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+        .fixed-dns {
+            margin-top: 20px;
+        }
+        .fixed-dns p {
+            background-color: #444;
+            padding: 10px;
+            display: inline-block;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .admin-panel {
+            display: none;
+            margin-top: 50px;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔹 Developer Mrezwa 🔹</h1>
+        <label for="vipCode">لایسنس خود را وارد کنید:</label>
+        <input type="text" id="vipCode" placeholder="مثلاً ABC123">
+        <button onclick="checkVIP()">ورود</button>
+        <br>
+        <button onclick="showAdminLogin()">ورود ادمین</button>
+
+        <div id="optionsSection" style="display: none;">
+            <h3>🔹 انتخاب اپراتور</h3>
+            <select id="operator" onchange="checkSelections()">
+                <option value="">-- انتخاب کنید --</option>
+                <option value="همراه">همراه</option>
+                <option value="وای‌فای">وای‌فای</option>
+                <option value="ایرانسل">ایرانسل</option>
+            </select>
+
+            <h3>🔹 نوع دی ان اس</h3>
+            <select id="dnsType" onchange="checkSelections()">
+                <option value="">-- انتخاب کنید --</option>
+                <option value="IPv4">IPv4</option>
+            </select>
+
+            <button id="generateBtn" onclick="generateDNS()" disabled>ساخت DNS</button>
+            <div class="dns-box" id="dnsOutput">DNS شما اینجا نمایش داده می‌شود.</div>
+
+            <h3>🔹 دی‌ان‌اس‌های ثابت</h3>
+            <div class="fixed-dns">
+                <p onclick="copyToClipboard('10.202.10.10')">🔹 10.202.10.10 (کپی)</p>
+                <p onclick="copyToClipboard('78.157.42.100')">🔹 78.157.42.100 (کپی)</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminLogin" style="display: none; margin-top: 50px;">
+        <h2>🔹 ورود ادمین 🔹</h2>
+        <input type="text" id="adminUser" placeholder="نام کاربری">
+        <input type="password" id="adminPass" placeholder="رمز عبور">
+        <button onclick="adminLogin()">ورود</button>
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+        <h2>🔹 پنل ادمین 🔹</h2>
+        <input type="text" id="newLicense" placeholder="لایسنس جدید">
+        <button onclick="addLicense()">افزودن لایسنس</button>
+        <button onclick="logoutAdmin()">خروج</button>
+        <h3>لایسنس‌های فعال:</h3>
+        <ul id="licenseList"></ul>
+    </div>
+
+    <script>
+        let validLicenses = JSON.parse(localStorage.getItem("validLicenses")) || ["ABC123", "VIP2", "VIP3"];
+        let usedLicenses = JSON.parse(localStorage.getItem("usedLicenses")) || {};
+        let isAdminLoggedIn = false;
+
+        function checkVIP() {
+            let vipCode = document.getElementById("vipCode").value.trim();
+
+            if (usedLicenses[vipCode]) {
+                alert("❌ این لایسنس قبلاً توسط شخص دیگری استفاده شده است!");
+                return;
+            }
+
+            if (validLicenses.includes(vipCode)) {
+                usedLicenses[vipCode] = true;
+                localStorage.setItem("usedLicenses", JSON.stringify(usedLicenses));
+
+                document.getElementById("optionsSection").style.display = "block";
+                alert("✅ لایسنس معتبر است! حالا می‌توانید DNS بسازید.");
+            } else {
+                alert("❌ لایسنس نامعتبر است. لطفاً لایسنس معتبر وارد کنید.");
+            }
+        }
+
+        function checkSelections() {
+            let operator = document.getElementById("operator").value;
+            let dnsType = document.getElementById("dnsType").value;
+            let generateBtn = document.getElementById("generateBtn");
+
+            if (operator && dnsType) {
+                generateBtn.disabled = false;
+            } else {
+                generateBtn.disabled = true;
+            }
+        }
+
+        function generateDNS() {
+            let dnsList = [
+                `${randomNumber(80, 95)}.${randomNumber(100, 200)}.${randomNumber(1, 255)}.${randomNumber(1, 255)}`,
+                `${randomNumber(80, 95)}.${randomNumber(50, 150)}.${randomNumber(0, 255)}.${randomNumber(0, 255)}`,
+                `${randomNumber(80, 95)}.${randomNumber(120, 180)}.${randomNumber(10, 240)}.${randomNumber(5, 250)}`
+            ];
+            let randomDNS = dnsList[Math.floor(Math.random() * dnsList.length)];
+            document.getElementById("dnsOutput").innerText = `🔹 DNS شما: ${randomDNS}`;
+        }
+
+        function showAdminLogin() {
+            document.getElementById("adminLogin").style.display = "block";
+        }
+
+        function adminLogin() {
+            let user = document.getElementById("adminUser").value;
+            let pass = document.getElementById("adminPass").value;
+
+            if (user === "rezwa" && pass === "123") {
+                isAdminLoggedIn = true;
+                document.getElementById("adminLogin").style.display = "none";
+                document.getElementById("adminPanel").style.display = "block";
+                updateLicenseList();
+            } else {
+                alert("❌ ورود ناموفق! اطلاعات را بررسی کنید.");
+            }
+        }
+
+        function addLicense() {
+            let newLicense = document.getElementById("newLicense").value.trim();
+            if (newLicense && !validLicenses.includes(newLicense)) {
+                validLicenses.push(newLicense);
+                localStorage.setItem("validLicenses", JSON.stringify(validLicenses));
+                updateLicenseList();
+            }
+        }
+
+        function updateLicenseList() {
+            let list = document.getElementById("licenseList");
+            list.innerHTML = "";
+            validLicenses.forEach(lic => {
+                let li = document.createElement("li");
+                li.textContent = lic;
+                list.appendChild(li);
+            });
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById("adminPanel").style.display = "none";
+        }
+    </script>
+</body>
+</html>
